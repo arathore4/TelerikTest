@@ -1,0 +1,1 @@
+console.log("Hello from Blazor web component");

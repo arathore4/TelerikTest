@@ -1,0 +1,69 @@
+version: v2beta1
+
+commands:
+  linting: |-
+    echo running frontend linting...
+  test: |-
+    echo running frontend test...
+deployments:
+  blazor-webcomponent:
+    helm:
+      chart:
+        name: oci://ghcr.io/abbott-aliniq/aip2/component-chart
+        version: 0.9.23
+      values:
+        global:
+          host: ${HOST}
+        service:
+          ports:
+            - port: ${PORT}
+        containers:
+          - image: artifacts.auth.products.abbott/ap-aliniq-ghcr-remote/abbott-aliniq/aip2/dotnet:7.0-1
+            env:
+              - name: PORT
+                value: ${PORT}
+        app: enabler-app
+        title: Blazor component
+        path: /blazor
+        index: blazor-web-component.js
+        basename: sample-blazor
+        customElement: blazor-web-component 
+dev:
+  blazor-webcomponent:
+    labelSelector:
+      app.kubernetes.io/component: blazor-webcomponent
+    command: ["npm"]
+    args: ["start"]
+    ports:
+      - port: ${PORT}:${PORT}
+    env:
+      - name: GITHUB_USER
+        value: ${GITHUB_USER}
+      - name: GITHUB_TOKEN
+        value: ${GITHUB_TOKEN}
+      - name: TELERIK_USER
+        value: ${TELERIK_USER}
+      - name: TELERIK_PASSWORD
+        value: ${TELERIK_PASSWORD}
+    logs:
+      enabled: true
+    patches:
+      - op: replace
+        path: spec.containers[*].imagePullPolicy
+        value: Always
+    workingDir: /app/blazor-dotnet6/WebComponent
+    sync:
+      - path: ./../..:/app
+        waitInitialSync: true
+        startContainer: true
+        disableDownload: true
+        excludePaths:
+          - .git
+          - node_modules
+          - public
+        onUpload:
+          exec:
+          - command: |-
+              npm install
+            failOnError: true
+            onChange: ["./package.json", "./package-lock.json"]

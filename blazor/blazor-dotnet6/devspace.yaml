@@ -1,0 +1,68 @@
+version: v2beta1
+
+commands:
+  linting: |-
+    echo running frontend linting...
+  test: |-
+    echo running frontend test...
+
+vars:
+  DEVSPACE_ENV_FILE: "../../.env"
+
+deployments:
+  blazor-server:
+    helm:
+      chart:
+        name: oci://ghcr.io/abbott-aliniq/aip2/component-chart
+        version: 0.9.23
+      values:
+        service:
+          ports:
+            - port: ${PORT}
+        containers:
+          - image: artifacts.auth.products.abbott/ap-aliniq-ghcr-remote/abbott-aliniq/aip2/dotnet:7.0-1
+        ingress:
+          rules:
+          - path: /enabler-app/blazor/_blazor
+            stripPath: /enabler-app/blazor
+          - path: /enabler-app/blazor/_content
+            stripPath: /enabler-app/blazor
+        global: 
+          host: ${HOST}
+dev:
+  blazor-server:
+    labelSelector:
+      app.kubernetes.io/component: blazor-server
+    command: ["dotnet"]
+    args: ["watch"]
+    ports:
+      - port: ${PORT}:${PORT}
+    env:
+      - name: GITHUB_USER
+        value: ${GITHUB_USER}
+      - name: GITHUB_TOKEN
+        value: ${GITHUB_TOKEN}
+      - name: TELERIK_USER
+        value: ${TELERIK_USER}
+      - name: TELERIK_PASSWORD
+        value: ${TELERIK_PASSWORD}
+      - name: DOTNET_WATCH_RESTART_ON_RUDE_EDIT
+        value: 1
+    logs:
+      enabled: true
+    patches:
+      - op: replace
+        path: spec.containers[*].imagePullPolicy
+        value: Always
+    workingDir: /app/blazor-dotnet6
+    sync:
+      - path: ./..:/app
+        waitInitialSync: true
+        startContainer: true
+        disableDownload: true
+        excludePaths:
+          - .git
+          - bin
+          - obj
+          - node_modules
+          - ../Microsoft.AspNetCore.Components.CustomElements/node_modules

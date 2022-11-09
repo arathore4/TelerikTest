@@ -1,0 +1,79 @@
+@using System.Text.Json.Serialization;
+@using System.ComponentModel.DataAnnotations;
+@using static Abbott.DesignSystem.Components.AbbottButton;
+@using static Abbott.DesignSystem.Components.AbbottForm;
+@page "/telerik"
+
+<PageTitle>Telerik</PageTitle>
+
+<h1>Telerik components</h1>
+<br />
+<AbbottButton OnClick="@SayHelloHandler" ThemeColor="primary">Say Hello</AbbottButton>
+<br />
+@helloString
+
+<br />
+<label>"@test"</label>
+<AbbottForm Model="@_authInfo" OnValidSubmit="@Authenticate"
+            Width=200px>
+    <FormValidation>
+        <DataAnnotationsValidator></DataAnnotationsValidator>
+    </FormValidation>
+    <FormItems>
+        <div data-e2e="username">
+            <input @bind="_authInfo.Username" />
+        </div>
+    </FormItems>
+    <FormButtons>
+        <div data-e2e="btn-authenticate">
+            <AbbottButton>Authenticate</AbbottButton>
+
+        </div>
+    </FormButtons>
+</AbbottForm>
+<AbbottButton @onclick="Authenticate">Authenticate 2</AbbottButton>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    MarkupString helloString;
+
+    void SayHelloHandler()
+    {
+        string msg = string.Format("Hello from <strong>Telerik Blazor</strong> at {0}.<br /> Now you can use C# to write front-end!", DateTime.Now);
+        helloString = new MarkupString(msg);
+    }
+
+    private string test = "";
+    public class AuthInfo
+    {
+        [Display(Name = "Username*:")]
+        [Required(ErrorMessage = "You must specify a username.")]
+        [JsonPropertyName("userprincipalname")]
+        public string Username { get; set; } = "";
+
+        [JsonPropertyName("displayname")]
+        public string Name { get; set; } = "";
+
+        [JsonPropertyName("id")]
+        public string Id { get; set; } = "1";
+
+        [JsonPropertyName("msg")]
+        public string ValidationMessage { get; set; } = "";
+    }
+
+    private async void Authenticate()
+    {
+        await Task.Run(() => { test = "Success "; });
+        Console.WriteLine("Button Clicked Auth");
+    }
+
+    private AuthInfo _authInfo = new AuthInfo();
+}
